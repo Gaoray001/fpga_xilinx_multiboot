@@ -1,0 +1,26 @@
+# Normalize line endings
+* text=auto eol=lf
+
+# Vivado / scripts
+*.tcl  text eol=lf
+*.xdc  text eol=lf
+*.sh   text eol=lf
+*.do   text eol=lf
+*.md   text eol=lf
+
+# HDL
+*.v    text eol=lf
+*.sv   text eol=lf
+*.vh   text eol=lf
+*.vhd  text eol=lf
+*.vhdl text eol=lf
+
+# Windows scripts
+*.ps1  text eol=crlf
+
+# Binary outputs
+*.bit  binary
+*.bin  binary
+*.mcs  binary
+*.rbt  binary
+*.ltx  text eol=lf
