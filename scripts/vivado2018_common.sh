@@ -17,11 +17,12 @@ Usage:
   ./scripts/vivado2018_common.sh bit
   ./scripts/vivado2018_common.sh full
   ./scripts/vivado2018_common.sh reports
+  ./scripts/vivado2018_common.sh xsim-smoke
   ./scripts/vivado2018_common.sh clean-runs
 
 Environment:
   VIVADO_SETTINGS=/tools/Xilinx/Vivado/2018.3/settings64.sh
-  COMMON_VIVADO_PART_NAME=xc7vx690tffg1927-2
+  COMMON_VIVADO_PART_NAME=xc7a35tfgg484-2
   COMMON_VIVADO_TOP_MODULE=Top
   COMMON_VIVADO_JOBS=all          # or an integer, e.g. 8
   ENABLE_DEBUG=1
@@ -59,6 +60,9 @@ case "$COMMAND" in
     ;;
   reports)
     TCL_SOURCE="tcl/build/50_reports.tcl"
+    ;;
+  xsim-smoke)
+    TCL_SOURCE="tcl/sim/xsim_smoke.tcl"
     ;;
   clean-runs)
     TCL_SOURCE="tcl/build/90_clean_runs.tcl"

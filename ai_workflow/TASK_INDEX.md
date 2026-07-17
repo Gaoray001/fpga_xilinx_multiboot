@@ -8,7 +8,7 @@
 
 | 任务 | 状态 | 分支 | 下一步（一句话） | 事实源 |
 |---|---|---|---|---|
-| <TS>_<slug> | ACTIVE | <branch> | <一句话> | `tasks/<TS>_<slug>/TASK_STATE.md` |
+| 20260717_xsim_smoke_test | ACTIVE | dev | 人工审查本任务 diff/report；若继续技术推进，另起一轮定义 Multiboot 功能级仿真目标。 | `tasks/20260717_xsim_smoke_test/TASK_STATE.md` |
 
 ## 表② 跨任务硬事实与证据红线
 
@@ -20,11 +20,14 @@
 
 ### 证据红线（禁止误称，所有任务适用）
 
-- <示例：仿真 PASS ≠ 上板 PASS>
+- 静态检查通过不等于 XSim 运行通过。
+- 仿真 PASS 不等于上板 PASS。
+- 未真实生成 `.wdb` 文件，不得声称 WDB 已成功生成。
 
 ### 平台分工
 
-- <示例：Linux = 批处理构建/状态归档；Windows = 上板/Hardware Manager>
+- Linux = 批处理构建、仿真、状态归档。
+- Windows = Vivado Hardware Manager、bit/ltx 下载和板卡调试。
 
 ## 规则入口（指针）
 
