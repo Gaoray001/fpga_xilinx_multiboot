@@ -26,7 +26,7 @@ description: Verilog/SystemVerilog RTL 代码风格规范。用于新增、修�
 ```verilog
 always @(posedge C_gclk_100M_i) begin
     if (R_gclk_100M_rst_i) begin
-        data_cnt_r <= {LP_CNT_W{1'b0}};
+        data_cnt_r <= {LPARAM_CNT_W{1'b0}};
     end
     else begin
         if (data_valid_i && data_ready_o) begin
@@ -47,21 +47,21 @@ end
 推荐使用功能分组注释：
 
 ```verilog
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Parameter
-// ============================================================
+////////////////////////////////////////////////////////////////
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Internal signal
-// ============================================================
+////////////////////////////////////////////////////////////////
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // FSM
-// ============================================================
+////////////////////////////////////////////////////////////////
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Sequential logic
-// ============================================================
+////////////////////////////////////////////////////////////////
 ```
 
 普通信号注释写在声明右侧或上一行，保持简短：
@@ -98,9 +98,9 @@ cdc_pulse_sync.v
 
 ```verilog
 module ddr3_da_read_engine #(
-    parameter integer P_DATA_W    = 512,
-    parameter integer P_ADDR_W    = 32,
-    parameter integer P_BURST_LEN = 16
+    parameter integer PARAM_DATA_W    = 512,
+    parameter integer PARAM_ADDR_W    = 32,
+    parameter integer PARAM_BURST_LEN = 16
 )(
     ...
 );
@@ -215,22 +215,22 @@ output wire         da_last_o
 
 ### 4.1 parameter 命名
 
-模块外部可配置参数使用 `P_` 前缀。
+模块外部可配置参数使用 `PARM_` 前缀。
 
 ```verilog
-parameter integer P_DATA_W    = 512,
-parameter integer P_ADDR_W    = 32,
-parameter integer P_BURST_LEN = 16
+parameter integer PARM_DATA_WIDTH    = 512,
+parameter integer PARM_ADDR_WIDTH   = 32,
+parameter integer PARM_BURST_LEN = 16
 ```
 
 ### 4.2 localparam 命名
 
-模块内部常量使用 `LP_` 前缀。
+模块内部常量使用 `LPARAM_` 前缀。
 
 ```verilog
-localparam integer LP_BYTE_W    = P_DATA_W / 8;
-localparam integer LP_CNT_W     = $clog2(P_BURST_LEN + 1);
-localparam integer LP_ADDR_STEP = LP_BYTE_W;
+localparam integer LPARAM_BYTE_WIDTH    = PARAM_DATA_WIDTH / 8;
+localparam integer LPARAM_CNT_WIDTH     = $clog2(PARM_BURST_LEN + 1);
+localparam integer LPARAM_ADDR_STEP = LPARAM_BYTE_WIDTH;
 ```
 
 ### 4.3 避免魔法数
@@ -246,7 +246,7 @@ addr_r <= addr_r + 64;
 推荐：
 
 ```verilog
-addr_r <= addr_r + LP_ADDR_STEP;
+addr_r <= addr_r + LPARM_ADDR_STEP;
 ```
 
 ### AXI 协议尺寸对照（并入自 FPGA_RTL_DEBUG_RULES §5）
@@ -330,7 +330,7 @@ end
 always @(posedge C_gclk_100M_i) begin
     if (R_gclk_100M_rst_i) begin
         valid_r <= 1'b0;
-        data_r  <= {P_DATA_W{1'b0}};
+        data_r  <= {PARAM_DATA_W{1'b0}};
     end
     else begin
         if (load_i) begin
@@ -431,9 +431,7 @@ reg [2:0] state_n;
 示例：
 
 ```verilog
-// ============================================================
 // FSM state register
-// ============================================================
 
 always @(posedge C_gclk_100M_i) begin
     if (R_gclk_100M_rst_i) begin
@@ -444,9 +442,7 @@ always @(posedge C_gclk_100M_i) begin
     end
 end
 
-// ============================================================
 // FSM next-state logic
-// ============================================================
 
 always @(*) begin
     state_n = state_r;
@@ -498,7 +494,7 @@ assign out_fire_w = out_valid_o && out_ready_i;
 
 - `valid_o` 必须保持；
 - `data_o` 必须保持；
-- `last_o` / `keep_o` / `user_o` 等 sideband 必须保持。
+- `last_o` / `keePARAM_o` / `user_o` 等 sideband 必须保持。
 
 示例：
 
@@ -506,7 +502,7 @@ assign out_fire_w = out_valid_o && out_ready_i;
 always @(posedge C_gclk_100M_i) begin
     if (R_gclk_100M_rst_i) begin
         out_valid_r <= 1'b0;
-        out_data_r  <= {P_DATA_W{1'b0}};
+        out_data_r  <= {PARAM_DATA_W{1'b0}};
     end
     else begin
         if (!out_valid_r || out_ready_i) begin
@@ -602,17 +598,17 @@ input  wire         m_axis_tready_i
 单 bit 控制信号跨时钟域使用至少两级同步器。
 
 ```verilog
-(* ASYNC_REG = "TRUE" *) reg start_sync1_r;
-(* ASYNC_REG = "TRUE" *) reg start_sync2_r;
+(* ASYNC_REG = "TRUE" *) reg start_i_r;
+(* ASYNC_REG = "TRUE" *) reg start_i_rr;
 
 always @(posedge C_dst_clk_i) begin
     if (R_dst_rst_i) begin
-        start_sync1_r <= 1'b0;
-        start_sync2_r <= 1'b0;
+        start_i_r <= 1'b0;
+        start_i_rr <= 1'b0;
     end
     else begin
-        start_sync1_r <= start_i;
-        start_sync2_r <= start_sync1_r;
+        start_i_r <= start_i;
+        start_i_rr <= start_i_r;
     end
 end
 ```
@@ -670,15 +666,13 @@ dut dut (
 
 ```verilog
 ddr3_da_read_engine u_ddr3_da_read_engine (
-    // ========================================================
+
     // gclk_100M domain
-    // ========================================================
+
     .C_gclk_100M_i          (C_gclk_100M),
     .R_gclk_100M_rst_i      (R_gclk_100M_rst),
 
-    // ========================================================
     // control
-    // ========================================================
     .start_i                (da_start_w),
     .done_o                 (da_done_w),
     .err_o                  (da_err_w),
@@ -725,46 +719,42 @@ ddr3_da_read_engine u_ddr3_da_read_engine (
 `timescale 1ns / 1ps
 
 module module_name #(
-    parameter integer P_DATA_W = 512,
-    parameter integer P_ADDR_W = 32
+    parameter integer PARM_DATA_WIDTH = 512,
+    parameter integer PARM_ADDR_WIDTH = 32
 )(
-    // ========================================================
+
     // Clock and reset
-    // ========================================================
     input  wire                  C_gclk_100M_i,
     input  wire                  R_gclk_100M_rst_i,
 
-    // ========================================================
+
     // Control
-    // ========================================================
     input  wire                  start_i,
     output wire                  done_o,
     output wire                  err_o,
 
-    // ========================================================
+
     // Input stream
-    // ========================================================
-    input  wire [P_DATA_W-1:0]   s_data_i,
+    input  wire [PARAM_DATA_W-1:0]   s_data_i,
     input  wire                  s_valid_i,
     output wire                  s_ready_o,
 
-    // ========================================================
+
     // Output stream
-    // ========================================================
-    output wire [P_DATA_W-1:0]   m_data_o,
+    output wire [PARAM_DATA_W-1:0]   m_data_o,
     output wire                  m_valid_o,
     input  wire                  m_ready_i
 );
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Local parameter
-// ============================================================
+////////////////////////////////////////////////////////////////
 
-localparam integer LP_BYTE_W = P_DATA_W / 8;
+localparam integer LPARAM_BYTE_W = PARAM_DATA_W / 8;
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Internal signal
-// ============================================================
+////////////////////////////////////////////////////////////////
 
 wire in_fire_w;
 wire out_fire_w;
@@ -772,16 +762,16 @@ wire out_fire_w;
 reg done_r;
 reg err_r;
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Handshake
-// ============================================================
+////////////////////////////////////////////////////////////////
 
 assign in_fire_w  = s_valid_i && s_ready_o;
 assign out_fire_w = m_valid_o && m_ready_i;
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Sequential logic
-// ============================================================
+////////////////////////////////////////////////////////////////
 
 always @(posedge C_gclk_100M_i) begin
     if (R_gclk_100M_rst_i) begin
@@ -797,9 +787,9 @@ always @(posedge C_gclk_100M_i) begin
     end
 end
 
-// ============================================================
+////////////////////////////////////////////////////////////////
 // Output assignment
-// ============================================================
+////////////////////////////////////////////////////////////////
 
 assign done_o = done_r;
 assign err_o  = err_r;
@@ -875,9 +865,9 @@ addr_r <= addr_r + 64;
 推荐：
 
 ```verilog
-localparam integer LP_BEAT_BYTE_W = P_DATA_W / 8;
+localparam integer LPARAM_BEAT_BYTE_W = PARAM_DATA_WIDTH / 8;
 
-addr_r <= addr_r + LP_BEAT_BYTE_W;
+addr_r <= addr_r + LPARAM_BEAT_BYTE_WIDTH;
 ```
 
 ---

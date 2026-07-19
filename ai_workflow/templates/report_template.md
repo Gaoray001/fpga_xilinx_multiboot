@@ -5,8 +5,9 @@
 > - **R1（可运行验证但不改工程逻辑）→ 中型**（轻型 + 命令记录 + 验证结果）
 > - **R2（改 RTL/Tcl/XDC/Python、跑 Vivado、上板、发 UDP、影响功能路径）→ 重型**
 >
-> 报告文件名：`reports/<agent>/<TS>_<slug>_report.md` 或任务 `reports/<TS>_<slug>_report.md`，
-> `TS=$(date +%Y%m%d_%H%M%S)`。单一事实来源仍是任务 `TASK_STATE.md`，报告不覆盖它。
+> 默认报告位置：当前任务目录 `reports/`。报告文件名：`<TS>_<slug>_report.md`，
+> `TS=$(date +%Y%m%d_%H%M%S)`。未经本轮 prompt 或用户明确指定，不再默认写入工程根目录 `reports/`。
+> 单一事实来源仍是任务 `TASK_STATE.md`，报告不覆盖它。
 
 ---
 

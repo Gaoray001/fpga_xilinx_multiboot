@@ -18,6 +18,7 @@ Usage:
   ./scripts/vivado2018_common.sh full
   ./scripts/vivado2018_common.sh reports
   ./scripts/vivado2018_common.sh xsim-smoke
+  ./scripts/vivado2018_common.sh xsim-multiboot-ctrl
   ./scripts/vivado2018_common.sh clean-runs
 
 Environment:
@@ -63,6 +64,9 @@ case "$COMMAND" in
     ;;
   xsim-smoke)
     TCL_SOURCE="tcl/sim/xsim_smoke.tcl"
+    ;;
+  xsim-multiboot-ctrl)
+    TCL_SOURCE="tcl/sim/xsim_multiboot_ctrl.tcl"
     ;;
   clean-runs)
     TCL_SOURCE="tcl/build/90_clean_runs.tcl"
@@ -110,6 +114,7 @@ ARTIFACTS_DIR="$ROOT_DIR/_artifacts/common_vivado/$RUN_NAME"
 LOGS_DIR="$RUN_DIR/logs"
 WORK_DIR="$RUN_DIR/work"
 LATEST_LINK="$ROOT_DIR/_runs/latest"
+ARTIFACT_LATEST_LINK="$ROOT_DIR/_artifacts/latest"
 mkdir -p "$REPORTS_DIR" "$ARTIFACTS_DIR" "$LOGS_DIR" "$WORK_DIR"
 
 COMMAND_FILE="$RUN_DIR/command.txt"
@@ -239,6 +244,34 @@ BITSTREAM_FOUND="${BITSTREAM_FOUND:-0}"
 echo "result: $RESULT" >> "$SUMMARY_FILE"
 echo "latest: $LATEST_LINK -> common_vivado/$RUN_NAME" >> "$SUMMARY_FILE"
 
+ARTIFACT_LATEST_UPDATED="0"
+ARTIFACT_LATEST_REASON="not_applicable"
+if [[ "$COMMAND" == "xsim-multiboot-ctrl" ]]; then
+  ARTIFACT_LATEST_REASON="command_failed"
+  if [[ "$STATUS" -eq 0 ]]; then
+    XSIM_RESULT_LOG="$LOGS_DIR/multiboot_ctrl_xsim.log"
+    XSIM_WDB="$ARTIFACTS_DIR/multiboot_ctrl.wdb"
+    if [[ -f "$XSIM_RESULT_LOG" ]] && [[ -f "$XSIM_WDB" ]] &&
+       grep -q "RESULT=PASS" "$XSIM_RESULT_LOG" &&
+       ! grep -q "RESULT=FAIL" "$XSIM_RESULT_LOG"; then
+      if [[ -e "$ARTIFACT_LATEST_LINK" && ! -L "$ARTIFACT_LATEST_LINK" ]]; then
+        ARTIFACT_LATEST_REASON="latest_exists_not_symlink"
+        echo "WARN: artifact latest exists but is not a symlink: $ARTIFACT_LATEST_LINK" >&2
+      else
+        ln -sfn "common_vivado/$RUN_NAME" "$ARTIFACT_LATEST_LINK"
+        ARTIFACT_LATEST_UPDATED="1"
+        ARTIFACT_LATEST_REASON="success_complete"
+      fi
+    else
+      ARTIFACT_LATEST_REASON="missing_pass_log_or_wdb"
+    fi
+  fi
+fi
+
+echo "artifact_latest: $ARTIFACT_LATEST_LINK" >> "$SUMMARY_FILE"
+echo "artifact_latest_updated: $ARTIFACT_LATEST_UPDATED" >> "$SUMMARY_FILE"
+echo "artifact_latest_reason: $ARTIFACT_LATEST_REASON" >> "$SUMMARY_FILE"
+
 {
   echo "finished=$FINISHED_AT"
   echo "exit_status=$STATUS"
@@ -247,6 +280,9 @@ echo "latest: $LATEST_LINK -> common_vivado/$RUN_NAME" >> "$SUMMARY_FILE"
   echo "synth_status=$SYNTH_STATUS"
   echo "impl_status=$IMPL_STATUS"
   echo "bitstream_found=$BITSTREAM_FOUND"
+  echo "artifact_latest=$ARTIFACT_LATEST_LINK"
+  echo "artifact_latest_updated=$ARTIFACT_LATEST_UPDATED"
+  echo "artifact_latest_reason=$ARTIFACT_LATEST_REASON"
 } >> "$STATUS_FILE"
 
 NOTIFY_ENABLE="${BUILD_NOTIFY_ENABLE:-0}"
@@ -284,6 +320,7 @@ echo "Vivado command: $COMMAND"
 echo "Result: $RESULT"
 echo "Run directory: $RUN_DIR"
 echo "Latest: $LATEST_LINK -> common_vivado/$RUN_NAME"
+echo "Artifact latest: $ARTIFACT_LATEST_LINK"
 echo "Vivado log: $VIVADO_LOG"
 echo "Vivado journal: $VIVADO_JOU"
 echo "Summary: $SUMMARY_FILE"
