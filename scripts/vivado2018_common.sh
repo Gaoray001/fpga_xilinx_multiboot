@@ -19,6 +19,7 @@ Usage:
   ./scripts/vivado2018_common.sh reports
   ./scripts/vivado2018_common.sh xsim-smoke
   ./scripts/vivado2018_common.sh xsim-multiboot-ctrl
+  ./scripts/vivado2018_common.sh xsim-top-uart-multiboot
   ./scripts/vivado2018_common.sh clean-runs
 
 Environment:
@@ -67,6 +68,9 @@ case "$COMMAND" in
     ;;
   xsim-multiboot-ctrl)
     TCL_SOURCE="tcl/sim/xsim_multiboot_ctrl.tcl"
+    ;;
+  xsim-top-uart-multiboot)
+    TCL_SOURCE="tcl/sim/xsim_top_uart_multiboot.tcl"
     ;;
   clean-runs)
     TCL_SOURCE="tcl/build/90_clean_runs.tcl"
@@ -246,11 +250,16 @@ echo "latest: $LATEST_LINK -> common_vivado/$RUN_NAME" >> "$SUMMARY_FILE"
 
 ARTIFACT_LATEST_UPDATED="0"
 ARTIFACT_LATEST_REASON="not_applicable"
-if [[ "$COMMAND" == "xsim-multiboot-ctrl" ]]; then
+if [[ "$COMMAND" == "xsim-multiboot-ctrl" || "$COMMAND" == "xsim-top-uart-multiboot" ]]; then
   ARTIFACT_LATEST_REASON="command_failed"
   if [[ "$STATUS" -eq 0 ]]; then
-    XSIM_RESULT_LOG="$LOGS_DIR/multiboot_ctrl_xsim.log"
-    XSIM_WDB="$ARTIFACTS_DIR/multiboot_ctrl.wdb"
+    if [[ "$COMMAND" == "xsim-top-uart-multiboot" ]]; then
+      XSIM_RESULT_LOG="$LOGS_DIR/top_uart_multiboot_xsim.log"
+      XSIM_WDB="$ARTIFACTS_DIR/top_uart_multiboot.wdb"
+    else
+      XSIM_RESULT_LOG="$LOGS_DIR/multiboot_ctrl_xsim.log"
+      XSIM_WDB="$ARTIFACTS_DIR/multiboot_ctrl.wdb"
+    fi
     if [[ -f "$XSIM_RESULT_LOG" ]] && [[ -f "$XSIM_WDB" ]] &&
        grep -q "RESULT=PASS" "$XSIM_RESULT_LOG" &&
        ! grep -q "RESULT=FAIL" "$XSIM_RESULT_LOG"; then

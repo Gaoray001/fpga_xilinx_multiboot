@@ -5,14 +5,14 @@
 
 ## 1. 当前状态
 
-- ACTIVE。阶段：S6 板级 Top + UART 触发定义/实现及非 Vivado 结构化静态自检已完成；等待人工审查并授权 S7 XSim。
+- ACTIVE。阶段：S7 Linux Vivado 编译/XSim gate 已完成，Top/UART 自检仿真 PASS。
 - 唯一下一步见 §6。
 
 ## 2. 关键事实（每条一行，证据 = report/commit 指针）
 
 ### 继承基线
 
-- 分支 `dev`，S6 本轮基线 `9dc8ee4 硬件板卡边界确定+Top板级实现方案规划`；证据：本轮 S6 报告。
+- 分支 `dev`，S7 本轮基线 `3ebbc88 增加uart触发源+multiboot逻辑-未上板卡验证`；证据：本轮 S7 报告。
 - 抽象 controller 与前置 XSim PASS 已提交；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
 
 ### 本轮新增事实
@@ -36,6 +36,11 @@
 - UART 接受 `BOOT APP\r\n` / `BOOT GOLDEN\r\n`，先回 ACK `0x06` 再发 valid-ready request，含 RX CDC、frame error 和 500 ms partial-command timeout；证据：本轮 S6 报告。
 - XDC 已补 50 MHz clock/UART pins，并定义 SPIx4、CONFIGRATE 12、fallback、timer、no compression；未设置 NEXT_CONFIG；证据：本轮 S6 报告。
 - 本轮非 Vivado 结构化静态检查 PASS；未发现可用开源 HDL 编译器，未运行 Vivado/编译/XSim；证据：本轮 S6 报告。
+- 新增 Top/UART XSim 入口：`sim/tb/tb_top_uart_multiboot.v`、`tcl/sim/xsim_top_uart_multiboot.tcl`、shell 命令 `xsim-top-uart-multiboot`；证据：`reports/20260719_232416_top_uart_xsim_report.md`。
+- 最终真实 run `20260719_232340_xsim-top-uart-multiboot` 为 SUCCESS，日志含 `RESULT=PASS`；证据：本轮 S7 报告。
+- xelab 日志明确编译 `uart_boot_trigger`、`Top`、`multiboot_ctrl`、`multiboot_icape2_wrapper`、`unisims_ver.ICAPE2/SIM_CONFIGE2`；证据：本轮 S7 报告。
+- S7 自检覆盖 UART 非法命令拒绝、partial-command timeout、ACK `0x06`、valid-ready backpressure hold、APP/GOLDEN 地址、ICAP 8-word 序列、byte bit-reversal、UNISIM WBSTAR/IPROG；证据：本轮 S7 报告。
+- WDB 为 `_artifacts/common_vivado/20260719_232340_xsim-top-uart-multiboot/top_uart_multiboot.wdb`，660151 bytes；`_runs/latest` 与 `_artifacts/latest` 均指向该成功 run；证据：本轮 S7 报告。
 
 ## 3. 阶段门（每 gate 一行：Planned / In Progress / Done）
 
@@ -46,12 +51,14 @@
 - S4 Done — ICAPE2 wrapper、UNISIM elaboration、自检 XSim 和报告收口。
 - S5 Done — Flash 模式、双镜像布局、WBSTAR 编码、UART 首发触发和恢复方案定义。
 - S6 Done — 板级 Top/UART/LED/XDC 实现与非 EDA 结构化静态自检。
+- S7 Done — Linux Vivado `xvlog/xelab/xsim` Top/UART 自检仿真。
 
 ## 4. 证据边界 / 禁止误称
 
 - 本轮证明 controller → wrapper → ICAPE2 UNISIM 的接口、控制节拍、位序和命令解码仿真通过。
 - S5 只定义 Flash 布局/地址方案，不证明实际 Flash 内容、bitstream、板级配置模式、时钟约束、真实 FPGA 重配置或 fallback 成功。
 - S6 静态 PASS 不等于 Verilog 编译、XSim、综合/实现、bitstream 或上板 PASS。
+- S7 XSim PASS 证明 Top/UART/controller/wrapper/ICAPE2 UNISIM 在仿真参数下通过自检；不证明综合、实现、XDC property、bitstream、Flash、真实 UART 或实板重配置。
 - `req_addr_i` 原样写入 WBSTAR；本平台 N25Q128 24-bit SPI 方案固定为 Flash byte offset，不能外推到 32-bit SPI/BPI。
 - XSim 中观察到 UNISIM IPROG pulse 不等于真实器件已重配置。
 - `_artifacts/latest` 只能指向成功且产物完整的 artifact 目录。
@@ -59,16 +66,15 @@
 ## 5. 待补证据 / 待决策 / 待授权
 
 - 人工审查前置 wrapper/TB/Tcl diff 和报告后决定是否提交。
-- 人工审查 S6 Top/UART/XDC diff 和扩大修改说明；Application build 必须设置 `PARAM_IMAGE_IS_APPLICATION=1`。
-- UART/Top 尚无 HDL parser、Vivado elaboration 或动态仿真证据；需单独授权 S7 XSim。
+- 人工审查 S7 Top/UART TB/Tcl/Shell diff 和扩大修改说明；Application build 必须设置 `PARAM_IMAGE_IS_APPLICATION=1`。
 - `CONFIGRATE=12`、`TIMER_CFG=0x00050000`、fallback/no-compress 均需后续 Vivado property/bitstream/实板复核。
 - bitstream、MCS/BIN、Flash 写入和 Hardware Manager 上板验证仍需单独授权。
 
 ## 6. 唯一下一步
 
-人工审查 `reports/20260719_205547_board_top_uart_integration_static_report.md` 与 3 个工程文件 diff；确认后另起 S7 Top/UART 自检 TB + Vivado XSim gate。
+人工审查 `reports/20260719_232416_top_uart_xsim_report.md` 与 S7 TB/Tcl/Shell diff；确认后另起 S8 Vivado build/property 审计 gate。
 
 ## 7. 仓库要点
 
-- S6 开工时唯一脏改动为用户修改的 `prompts/codex/006_board_level_top_uart_trigger_integration_def_impl.md` 1 行硬件事实，本轮未修改、未回滚。
+- S7 开工时唯一脏改动为未跟踪 `prompts/codex/007_push_vivado_xsim_exec.md`；本轮未修改、未回滚。
 - 本轮不执行 git add/commit/push/reset/clean/stash，不运行综合/实现/bitstream，不上板。
