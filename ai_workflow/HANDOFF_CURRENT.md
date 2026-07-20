@@ -1,29 +1,26 @@
 # 当前工程交接（下一位 agent 第一屏）
 
 > 只放第一屏；唯一事实源 = 当前任务 `TASK_STATE.md`（纯快照，agent 专用）。
-> 本文件每轮全量重写，硬上限 30 行。时间戳：20260717_021312
+> 本文件每轮全量重写，硬上限 30 行。时间戳：20260719_024339
 
 ## 当前任务
 
-20260717_multiboot_ctrl_fsm — 抽象 Multiboot 状态机 + Linux XSim 功能仿真闭环。
+20260717_multiboot_ctrl_fsm — Multiboot controller + ICAPE2 wrapper + Linux XSim/UNISIM。
 
 ## 关键现状（详见任务 TASK_STATE §2）
 
-- 已实现 `rtl/hdl/user/multiboot/multiboot_ctrl.v` 抽象状态机，接口为请求 + 抽象 command valid/ready，未接入 ICAP 原语。
-- 已实现 `sim/tb/tb_multiboot_ctrl.v` 自检 TB，覆盖连续 ready、backpressure、busy 新请求、执行中 reset。
-- 已真实运行 `./scripts/vivado2018_common.sh xsim-multiboot-ctrl`；成功 run = `20260717_021704_xsim-multiboot-ctrl`。
-- `multiboot_ctrl_xsim.log` 含 `RESULT=PASS`；WDB = `_artifacts/common_vivado/20260717_021704_xsim-multiboot-ctrl/multiboot_ctrl.wdb`。
-- `_runs/latest` 与 `_artifacts/latest` 均指向 `common_vivado/20260717_021704_xsim-multiboot-ctrl`。
-- 该 PASS 只覆盖抽象状态机功能仿真，不覆盖真实 ICAP、Flash 布局或上板 Multiboot。
+- 已实现 `multiboot_ctrl → multiboot_icape2_wrapper → ICAPE2`，抽象 controller 未绑定器件原语。
+- wrapper 使用 X32 ICAPE2，实际写拍 `CSIB=0` / `RDWRB=0`，配置字逐 byte bit-reversal。
+- 自检 TB 覆盖顺序/数量/物理数据、reset、busy 新请求、backpressure、UNISIM WBSTAR/IPROG 解码。
+- 最终 run `20260719_024313_xsim-multiboot-ctrl`：`RESULT=PASS`，xelab 含 `unisims_ver.ICAPE2/SIM_CONFIGE2`。
+- WDB：`_artifacts/common_vivado/20260719_024313_xsim-multiboot-ctrl/multiboot_ctrl.wdb`，44104 bytes。
+- `_runs/latest` 与 `_artifacts/latest` 均指向该成功 run。
+- PASS 仅覆盖 ICAPE2 UNISIM 接口仿真，不覆盖 Flash 布局、地址编码、bitstream 或上板重配置。
 
 ## 下一步唯一动作
 
-人工审查本任务 diff/report；若继续推进，另起一轮定义真实 ICAP/Flash/上板边界或更高层功能仿真目标。
-
-## 插叙账（不改主线的支线轮在此各记一行；主线推进后清空）
-
-（空）
+人工审查本轮 diff/report；通过后另起一轮定义具体 Flash 模式/布局与上板验证 gate。
 
 ## 最新 report 指针
 
-- `ai_workflow/tasks/20260717_multiboot_ctrl_fsm/reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`
+- `ai_workflow/tasks/20260717_multiboot_ctrl_fsm/reports/20260719_024339_multiboot_icape2_xsim_report.md`

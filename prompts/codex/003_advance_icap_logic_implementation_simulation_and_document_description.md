@@ -7,7 +7,7 @@
 ```text
 - 当前分支：dev
 - 当前工程：/data/work/fpga/multiboot
-- 活跃任务：ai_workflow/tasks/20260719_icape2_integration
+- 活跃任务：ai_workflow/tasks/20260717_multiboot_ctrl_fsm
 
 - 前置任务已完成 Multiboot 抽象状态机及 XSim 功能仿真，真实调用链已验证：
   Shell → Tcl → xvlog → xelab → xsim → Verilog Testbench → RESULT=PASS
@@ -52,24 +52,11 @@
 ## WRITE_ALLOW
 
 ```text
-允许修改或新增：
-
-- rtl/hdl/user/multiboot/**
-- sim/tb/**multiboot**
-- sim/xsim/**
-- sim/wave/**
-- tcl/sim/**
-- scripts/vivado2018_common.sh
-- scripts/open_latest_gui.sh
-- scripts/**multiboot**
-- scripts/**icap**
-
-- ai_workflow/HANDOFF_CURRENT.md
-- ai_workflow/TASK_INDEX.md
-- ai_workflow/tasks/20260719_icape2_integration/**
-
-- _runs/latest
-- _artifacts/latest
+允许新增或修改.v文件
+允许新增或修改.sh文件
+允许新增或修改.tcl文件
+允许更新 multiboot/ai_workflow 状态文件
+允许增加 ai_workflow/tasks/20260717_multiboot_ctrl_fsm/reports/<TS>_xxx.md  (报告名自行确定)
 ```
 
 ## PREFERENCE
@@ -136,9 +123,8 @@ R2：可运行且可修改。
 
 7. 通过时生成非空 WDB，并在报告中记录路径、打开方式和建议观察信号。
 
-8. `_runs/latest` 指向最近运行；`_artifacts/latest` 仅在 RESULT=PASS 且日志、WDB 等产物完整时更新。
 
-9. 报告记录：
+8. 报告记录：
    - 修改文件
    - 实际运行命令
    - 官方资料及本地工具依据
@@ -146,7 +132,7 @@ R2：可运行且可修改。
    - 仿真能够证明与不能证明的内容
    - 未执行事项、风险和下一步建议
 
-10. 更新任务状态文件、交接文件和任务索引。
+9. 更新任务状态文件、交接文件和任务索引。
 
 
 ```

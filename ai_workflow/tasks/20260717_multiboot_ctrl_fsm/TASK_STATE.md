@@ -1,54 +1,59 @@
 # 20260717_multiboot_ctrl_fsm 任务状态（纯快照）
 
 > 本文件是本任务状态的唯一事实来源（SSOT），agent 专用；硬上限 150 行。
-> 轮次历史 = 本目录 `reports/` + git log。任务定义见 `TASK.md`；验收见 `ACCEPTANCE.md`。
+> 轮次历史 = 本目录 `reports/` + git log。任务定义见 `TASK.md`；验收以最新 prompt 为准。
 
 ## 1. 当前状态
 
-- ACTIVE。阶段：S3 抽象 Multiboot 状态机 XSim 功能仿真已 PASS，等待人工审查 diff/report。
+- ACTIVE。阶段：S4 ICAPE2 wrapper + UNISIM XSim 接口仿真已 PASS，等待人工审查 diff/report。
 - 唯一下一步见 §6。
 
 ## 2. 关键事实（每条一行，证据 = report/commit 指针）
 
 ### 继承基线
 
-- 分支 `dev`，基线 `e9a8047 Xsim冒烟测试-可观察vivado仿真波形`；证据：本轮报告。
-- 前置 smoke 调用链已真实通过；证据：`ai_workflow/tasks/20260717_xsim_smoke_test/TASK_STATE.md`。
+- 分支 `dev`，本轮基线 `076720e 增加最小multiboot逻辑实现`；证据：本轮报告。
+- 抽象 controller 与前置 XSim PASS 已提交；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
 
-### 本任务新增事实
+### 本轮新增事实
 
-- 已实现抽象 `multiboot_ctrl` FSM，外部为请求接口 + 抽象 command valid/ready 接口，未实例化 ICAP 原语；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
-- 已实现 Verilog 自检 TB，覆盖连续 ready、间歇 backpressure、busy 期间新请求、执行中 reset；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
-- 已新增 Shell 入口 `./scripts/vivado2018_common.sh xsim-multiboot-ctrl` 和 Tcl 入口 `tcl/sim/xsim_multiboot_ctrl.tcl`；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
-- 真实运行 `20260717_021704_xsim-multiboot-ctrl` 成功，`multiboot_ctrl_xsim.log` 含 `RESULT=PASS`；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
-- 已生成 WDB：`_artifacts/common_vivado/20260717_021704_xsim-multiboot-ctrl/multiboot_ctrl.wdb`，大小 29894 bytes；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
-- `_runs/latest` 和 `_artifacts/latest` 均指向 `common_vivado/20260717_021704_xsim-multiboot-ctrl`；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
-- 报告默认路径规则已同步到 `ai_workflow/AGENT_RULES.md` 和 `ai_workflow/templates/report_template.md`；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
+- 已新增 `multiboot_icape2_wrapper`，边界为抽象命令流到 `ICAPE2` X32 原语，原 `multiboot_ctrl` 未修改；证据：`reports/20260719_024339_multiboot_icape2_xsim_report.md`。
+- wrapper 在实际写拍驱动 `CSIB=0`、`RDWRB=0`，并对 32-bit 配置字每个 byte 内做 bit-reversal；证据：本轮报告。
+- `icap_enable_i` 负责授权/暂停写入；ICAPE2 本身没有 ready 输出，reset 或 enable 低时 wrapper 对 controller backpressure 且 `CSIB=1`；证据：本轮报告。
+- 自检 TB 覆盖模型初始化、8-word 顺序/数量、ICAP 控制与物理数据、backpressure、busy 新请求、执行中 reset、UNISIM WBSTAR 和 IPROG 解码；证据：本轮报告。
+- 最终真实 run `20260719_024313_xsim-multiboot-ctrl` 为 SUCCESS，日志含 `RESULT=PASS`；证据：本轮报告。
+- xelab 日志明确编译 `unisims_ver.SIM_CONFIGE2` 与 `unisims_ver.ICAPE2`；证据：本轮报告。
+- UNISIM 模型观测到 `WBSTAR=0x00200000` 与 IPROG pulse；证据：本轮报告。
+- WDB 为 `_artifacts/common_vivado/20260719_024313_xsim-multiboot-ctrl/multiboot_ctrl.wdb`，44104 bytes；证据：本轮报告。
+- `_runs/latest` 与 `_artifacts/latest` 均指向 `common_vivado/20260719_024313_xsim-multiboot-ctrl`；证据：本轮报告。
 
 ## 3. 阶段门（每 gate 一行：Planned / In Progress / Done）
 
 - S0 Done — 任务初始化与边界登记。
 - S1 Done — 抽象 FSM / TB / Tcl / Shell 入口实现。
-- S2 Done — Linux XSim 功能级仿真运行通过。
-- S3 Done — latest 链接、状态和报告收口。
+- S2 Done — Linux XSim 抽象功能仿真运行通过。
+- S3 Done — 抽象仿真状态与报告收口。
+- S4 Done — ICAPE2 wrapper、UNISIM elaboration、自检 XSim 和报告收口。
 
 ## 4. 证据边界 / 禁止误称
 
-- 本任务只验证抽象状态机和抽象命令流。
-- 本任务已有一次真实 `xsim-multiboot-ctrl` PASS 证据。
-- 不验证真实 ICAP 原语、Flash 布局、Golden/Application 镜像或上板 Multiboot。
+- 本轮证明 controller → wrapper → ICAPE2 UNISIM 的接口、控制节拍、位序和命令解码仿真通过。
+- 本轮不证明 bitstream、Flash 内容/布局、配置模式、时钟约束、实际 FPGA 重配置或 fallback 成功。
+- `req_addr_i` 当前原样写入 WBSTAR，是寄存器 payload；若上层提供 Flash byte address，必须按实际 SPI/BPI 模式另行编码和验证。
+- XSim 中观察到 UNISIM IPROG pulse 不等于真实器件已重配置。
 - `_artifacts/latest` 只能指向成功且产物完整的 artifact 目录。
 
 ## 5. 待补证据 / 待决策 / 待授权
 
-- 人工审查本任务 diff/report 后决定是否提交。
-- 后续若要接入真实 ICAP、Flash 布局或上板 Multiboot，需要单独授权和验收口径。
+- 人工审查本轮 wrapper/TB/Tcl diff 和报告后决定是否提交。
+- 上板前必须确定目标器件精确型号、配置模式、Flash byte address 到 WBSTAR 的编码、镜像布局、ICAP 时钟约束和 fallback 策略。
+- bitstream、MCS/BIN、Flash 写入和 Hardware Manager 上板验证仍需单独授权。
 
 ## 6. 唯一下一步
 
-人工审查本任务 diff/report；若继续推进，另起一轮定义真实 ICAP/Flash/上板边界或更高层功能仿真目标。
+人工审查本轮 diff/report；通过后另起一轮定义具体 Flash 模式/布局与上板验证 gate。
 
 ## 7. 仓库要点
 
-- 开工时工作区仅有未跟踪 prompt：`prompts/codex/002_build_corresponding_linux_xsim_functional_simulation_closed_loop.md`。
-- 本轮不执行 git add/commit/push，不切换分支，不清理未跟踪文件。
+- 开工时唯一脏改动为用户修改的 `prompts/codex/003_advance_icap_logic_implementation_simulation_and_document_description.md`，本轮未修改、未清理、未回滚。
+- 本轮不执行 git add/commit/push/reset/clean/stash，不运行综合/实现/bitstream，不上板。

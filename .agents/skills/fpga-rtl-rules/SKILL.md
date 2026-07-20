@@ -215,12 +215,12 @@ output wire         da_last_o
 
 ### 4.1 parameter 命名
 
-模块外部可配置参数使用 `PARM_` 前缀。
+模块外部可配置参数使用 `PARAM_` 前缀。
 
 ```verilog
-parameter integer PARM_DATA_WIDTH    = 512,
-parameter integer PARM_ADDR_WIDTH   = 32,
-parameter integer PARM_BURST_LEN = 16
+parameter integer PARAM_DATA_WIDTH = 512,
+parameter integer PARAM_ADDR_WIDTH = 32,
+parameter integer PARAM_BURST_LEN  = 16
 ```
 
 ### 4.2 localparam 命名
@@ -228,9 +228,9 @@ parameter integer PARM_BURST_LEN = 16
 模块内部常量使用 `LPARAM_` 前缀。
 
 ```verilog
-localparam integer LPARAM_BYTE_WIDTH    = PARAM_DATA_WIDTH / 8;
-localparam integer LPARAM_CNT_WIDTH     = $clog2(PARM_BURST_LEN + 1);
-localparam integer LPARAM_ADDR_STEP = LPARAM_BYTE_WIDTH;
+localparam integer LPARAM_BYTE_WIDTH = PARAM_DATA_WIDTH / 8;
+localparam integer LPARAM_CNT_WIDTH  = $clog2(PARAM_BURST_LEN + 1);
+localparam integer LPARAM_ADDR_STEP  = LPARAM_BYTE_WIDTH;
 ```
 
 ### 4.3 避免魔法数
@@ -246,7 +246,7 @@ addr_r <= addr_r + 64;
 推荐：
 
 ```verilog
-addr_r <= addr_r + LPARM_ADDR_STEP;
+addr_r <= addr_r + LPARAM_ADDR_STEP;
 ```
 
 ### AXI 协议尺寸对照（并入自 FPGA_RTL_DEBUG_RULES §5）
@@ -432,7 +432,6 @@ reg [2:0] state_n;
 
 ```verilog
 // FSM state register
-
 always @(posedge C_gclk_100M_i) begin
     if (R_gclk_100M_rst_i) begin
         state_r <= ST_IDLE;
@@ -494,7 +493,7 @@ assign out_fire_w = out_valid_o && out_ready_i;
 
 - `valid_o` 必须保持；
 - `data_o` 必须保持；
-- `last_o` / `keePARAM_o` / `user_o` 等 sideband 必须保持。
+- `last_o` / `keep_o` / `user_o` 等 sideband 必须保持。
 
 示例：
 
@@ -719,8 +718,8 @@ ddr3_da_read_engine u_ddr3_da_read_engine (
 `timescale 1ns / 1ps
 
 module module_name #(
-    parameter integer PARM_DATA_WIDTH = 512,
-    parameter integer PARM_ADDR_WIDTH = 32
+    parameter integer PARAM_DATA_W = 512,
+    parameter integer PARAM_ADDR_W = 32
 )(
 
     // Clock and reset
@@ -867,7 +866,7 @@ addr_r <= addr_r + 64;
 ```verilog
 localparam integer LPARAM_BEAT_BYTE_W = PARAM_DATA_WIDTH / 8;
 
-addr_r <= addr_r + LPARAM_BEAT_BYTE_WIDTH;
+addr_r <= addr_r + LPARAM_BEAT_BYTE_W;
 ```
 
 ---

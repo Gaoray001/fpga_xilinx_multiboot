@@ -1,9 +1,10 @@
-# Project-local XSim functional simulation for the abstract Multiboot FSM.
+# Project-local XSim simulation for the Multiboot controller and ICAPE2 path.
 #
 # Intended call path:
 #   ./scripts/vivado2018_common.sh xsim-multiboot-ctrl
 #     -> vivado -mode batch -source tcl/sim/xsim_multiboot_ctrl.tcl
 #     -> xvlog / xelab / xsim
+#     -> controller -> ICAPE2 wrapper -> UNISIM ICAPE2
 #     -> sim/tb/tb_multiboot_ctrl.v prints RESULT=PASS or RESULT=FAIL
 
 proc env_or_default {name fallback} {
@@ -41,8 +42,10 @@ file mkdir $SIM_WORK_DIR
 file mkdir $LOGS_DIR
 file mkdir $ARTIFACTS_DIR
 
-set DUT_FILE [file join $ROOT_DIR "rtl" "hdl" "user" "multiboot" "multiboot_ctrl.v"]
-set TB_FILE  [file join $ROOT_DIR "sim" "tb" "tb_multiboot_ctrl.v"]
+set CTRL_FILE    [file join $ROOT_DIR "rtl" "hdl" "user" "multiboot" "multiboot_ctrl.v"]
+set WRAPPER_FILE [file join $ROOT_DIR "rtl" "hdl" "user" "multiboot" "multiboot_icape2_wrapper.v"]
+set TB_FILE      [file join $ROOT_DIR "sim" "tb" "tb_multiboot_ctrl.v"]
+set GLBL_FILE    [file join $::env(XILINX_VIVADO) "data" "verilog" "src" "glbl.v"]
 
 set SNAPSHOT_NAME "multiboot_ctrl_snapshot"
 set XVLOG_LOG     [file join $LOGS_DIR "multiboot_ctrl_xvlog.log"]
@@ -51,7 +54,7 @@ set XSIM_LOG      [file join $LOGS_DIR "multiboot_ctrl_xsim.log"]
 set XSIM_BATCH    [file join $SIM_WORK_DIR "multiboot_ctrl_run.tcl"]
 set WDB_FILE      [file join $ARTIFACTS_DIR "multiboot_ctrl.wdb"]
 
-foreach src_file [list $DUT_FILE $TB_FILE] {
+foreach src_file [list $CTRL_FILE $WRAPPER_FILE $TB_FILE $GLBL_FILE] {
     if {![file exists $src_file]} {
         error "required simulation source is missing: $src_file"
     }
@@ -71,11 +74,11 @@ puts "INFO: multiboot_ctrl WDB_FILE      = $WDB_FILE"
 
 cd $SIM_WORK_DIR
 
-set compile_files [list $DUT_FILE $TB_FILE]
-set xvlog_cmd [concat [list xvlog -work xil_defaultlib -log $XVLOG_LOG] $compile_files]
+set compile_files [list $CTRL_FILE $WRAPPER_FILE $TB_FILE $GLBL_FILE]
+set xvlog_cmd [concat [list xvlog -work xil_defaultlib -L unisims_ver -log $XVLOG_LOG] $compile_files]
 run_external_cmd $xvlog_cmd
 
-set xelab_cmd [list xelab -debug typical -L xil_defaultlib -snapshot $SNAPSHOT_NAME xil_defaultlib.tb_multiboot_ctrl -log $XELAB_LOG]
+set xelab_cmd [list xelab -debug typical -L xil_defaultlib -L unisims_ver -snapshot $SNAPSHOT_NAME xil_defaultlib.tb_multiboot_ctrl xil_defaultlib.glbl -log $XELAB_LOG]
 run_external_cmd $xelab_cmd
 
 set xsim_cmd [list xsim $SNAPSHOT_NAME -tclbatch $XSIM_BATCH -wdb $WDB_FILE -log $XSIM_LOG]
