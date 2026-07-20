@@ -5,7 +5,7 @@
 
 ## 1. 当前状态
 
-- ACTIVE。阶段：S7 Linux Vivado 编译/XSim gate 已完成，Top/UART 自检仿真 PASS。
+- ACTIVE。阶段：S7 Linux Vivado 编译/XSim gate 已完成，S8 逻辑梳理报告完成；Top/UART 自检仿真 PASS。
 - 唯一下一步见 §6。
 
 ## 2. 关键事实（每条一行，证据 = report/commit 指针）
@@ -37,10 +37,12 @@
 - XDC 已补 50 MHz clock/UART pins，并定义 SPIx4、CONFIGRATE 12、fallback、timer、no compression；未设置 NEXT_CONFIG；证据：本轮 S6 报告。
 - 本轮非 Vivado 结构化静态检查 PASS；未发现可用开源 HDL 编译器，未运行 Vivado/编译/XSim；证据：本轮 S6 报告。
 - 新增 Top/UART XSim 入口：`sim/tb/tb_top_uart_multiboot.v`、`tcl/sim/xsim_top_uart_multiboot.tcl`、shell 命令 `xsim-top-uart-multiboot`；证据：`reports/20260719_232416_top_uart_xsim_report.md`。
-- 最终真实 run `20260719_232340_xsim-top-uart-multiboot` 为 SUCCESS，日志含 `RESULT=PASS`；证据：本轮 S7 报告。
+- S7 原始真实 run `20260719_232340_xsim-top-uart-multiboot` 为 SUCCESS，日志含 `RESULT=PASS`；证据：本轮 S7 报告。
+- 当前 latest 真实 run `20260719_235747_xsim-top-uart-multiboot` 也为 SUCCESS，日志含 `RESULT=PASS`；证据：`reports/20260720_003126_top_uart_logic_and_tb_arrangement_report.md`。
 - xelab 日志明确编译 `uart_boot_trigger`、`Top`、`multiboot_ctrl`、`multiboot_icape2_wrapper`、`unisims_ver.ICAPE2/SIM_CONFIGE2`；证据：本轮 S7 报告。
 - S7 自检覆盖 UART 非法命令拒绝、partial-command timeout、ACK `0x06`、valid-ready backpressure hold、APP/GOLDEN 地址、ICAP 8-word 序列、byte bit-reversal、UNISIM WBSTAR/IPROG；证据：本轮 S7 报告。
-- WDB 为 `_artifacts/common_vivado/20260719_232340_xsim-top-uart-multiboot/top_uart_multiboot.wdb`，660151 bytes；`_runs/latest` 与 `_artifacts/latest` 均指向该成功 run；证据：本轮 S7 报告。
+- 当前 latest WDB 为 `_artifacts/common_vivado/20260719_235747_xsim-top-uart-multiboot/top_uart_multiboot.wdb`，660151 bytes；`_runs/latest` 与 `_artifacts/latest` 均指向该成功 run；证据：本轮 S8 梳理报告。
+- 已完成顶层/子模块调用逻辑、数据走向、testbench 激励与推进下一阶段判据说明；证据：`reports/20260720_003126_top_uart_logic_and_tb_arrangement_report.md`。
 
 ## 3. 阶段门（每 gate 一行：Planned / In Progress / Done）
 
@@ -52,6 +54,7 @@
 - S5 Done — Flash 模式、双镜像布局、WBSTAR 编码、UART 首发触发和恢复方案定义。
 - S6 Done — 板级 Top/UART/LED/XDC 实现与非 EDA 结构化静态自检。
 - S7 Done — Linux Vivado `xvlog/xelab/xsim` Top/UART 自检仿真。
+- S8 Done — 当前 Top/UART 集成逻辑与 testbench 安排梳理报告。
 
 ## 4. 证据边界 / 禁止误称
 
@@ -72,9 +75,9 @@
 
 ## 6. 唯一下一步
 
-人工审查 `reports/20260719_232416_top_uart_xsim_report.md` 与 S7 TB/Tcl/Shell diff；确认后另起 S8 Vivado build/property 审计 gate。
+人工审查 `reports/20260720_003126_top_uart_logic_and_tb_arrangement_report.md`；确认理解与证据边界后另起 S9 Vivado build/property 审计 gate。
 
 ## 7. 仓库要点
 
-- S7 开工时唯一脏改动为未跟踪 `prompts/codex/007_push_vivado_xsim_exec.md`；本轮未修改、未回滚。
+- S8 开工时唯一脏改动为未跟踪 `prompts/codex/008_multiboot_new_top_uart_integrated_selftest_testbench_arrange.md`；本轮未修改、未回滚。
 - 本轮不执行 git add/commit/push/reset/clean/stash，不运行综合/实现/bitstream，不上板。
