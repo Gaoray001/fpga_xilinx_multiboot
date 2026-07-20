@@ -5,14 +5,14 @@
 
 ## 1. 当前状态
 
-- ACTIVE。阶段：S5 Flash 模式 / 镜像布局 / WBSTAR 编码方案已定义；等待人工审查并补充板级 UART/时钟事实后进入 S6。
+- ACTIVE。阶段：S6 板级 Top + UART 触发定义/实现及非 Vivado 结构化静态自检已完成；等待人工审查并授权 S7 XSim。
 - 唯一下一步见 §6。
 
 ## 2. 关键事实（每条一行，证据 = report/commit 指针）
 
 ### 继承基线
 
-- 分支 `dev`，S5 本轮基线 `27bbdef 增加multiboot逻辑实现理解`；证据：本轮 S5 报告。
+- 分支 `dev`，S6 本轮基线 `9dc8ee4 硬件板卡边界确定+Top板级实现方案规划`；证据：本轮 S6 报告。
 - 抽象 controller 与前置 XSim PASS 已提交；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
 
 ### 本轮新增事实
@@ -27,11 +27,15 @@
 - WDB 为 `_artifacts/common_vivado/20260719_024313_xsim-multiboot-ctrl/multiboot_ctrl.wdb`，44104 bytes；证据：本轮报告。
 - `_runs/latest` 与 `_artifacts/latest` 均指向 `common_vivado/20260719_024313_xsim-multiboot-ctrl`；证据：本轮报告。
 - 本轮未改 RTL/Tcl/TB、未运行 Vivado，仅新增当前实现逻辑梳理报告；证据：`reports/20260719_183228_multiboot_logic_sortout_report.md`。
-- 当前 `rtl/hdl/user/Top.v` 为空，Multiboot 链路尚未接入板级顶层；证据：`reports/20260719_183228_multiboot_logic_sortout_report.md`。
 - S5 固定目标为 `xc7a35tfgg484-2` + `N25Q128A13ESE40G` 16 MiB + Master SPI x4 / 24-bit byte addressing；证据：`reports/20260719_194352_multiboot_flash_layout_solution_report.md`。
 - Golden offset/WBSTAR 为 `0x00000000`，Application offset/WBSTAR 为 `0x00800000`；单镜像规划上限 4 MiB，中间保留 4 MiB guard；证据：本轮 S5 报告。
 - 默认上电运行 Golden；第一阶段由 UART 运行时触发 ICAPE2，两个 bitstream 均不嵌入自动 NEXT_CONFIG_ADDR/IPROG；Ethernet 触发后移；证据：本轮 S5 报告。
 - S5 只完成方案定义，未改代码、未运行 Vivado、未生成 bitstream/MCS、未上板；证据：本轮 S5 报告。
+- S6 板级事实已固定：50 MHz W19、低有效 reset N15、UART1 TX N17/RX P17 LVCMOS33、Master SPI x4 `M[2:0]=001`；证据：`reports/20260719_205547_board_top_uart_integration_static_report.md`。
+- `Top.v` 已接入 UART trigger → controller → ICAPE2 wrapper，默认 Golden 1 Hz，参数化 Application 4 Hz；证据：本轮 S6 报告。
+- UART 接受 `BOOT APP\r\n` / `BOOT GOLDEN\r\n`，先回 ACK `0x06` 再发 valid-ready request，含 RX CDC、frame error 和 500 ms partial-command timeout；证据：本轮 S6 报告。
+- XDC 已补 50 MHz clock/UART pins，并定义 SPIx4、CONFIGRATE 12、fallback、timer、no compression；未设置 NEXT_CONFIG；证据：本轮 S6 报告。
+- 本轮非 Vivado 结构化静态检查 PASS；未发现可用开源 HDL 编译器，未运行 Vivado/编译/XSim；证据：本轮 S6 报告。
 
 ## 3. 阶段门（每 gate 一行：Planned / In Progress / Done）
 
@@ -41,11 +45,13 @@
 - S3 Done — 抽象仿真状态与报告收口。
 - S4 Done — ICAPE2 wrapper、UNISIM elaboration、自检 XSim 和报告收口。
 - S5 Done — Flash 模式、双镜像布局、WBSTAR 编码、UART 首发触发和恢复方案定义。
+- S6 Done — 板级 Top/UART/LED/XDC 实现与非 EDA 结构化静态自检。
 
 ## 4. 证据边界 / 禁止误称
 
 - 本轮证明 controller → wrapper → ICAPE2 UNISIM 的接口、控制节拍、位序和命令解码仿真通过。
 - S5 只定义 Flash 布局/地址方案，不证明实际 Flash 内容、bitstream、板级配置模式、时钟约束、真实 FPGA 重配置或 fallback 成功。
+- S6 静态 PASS 不等于 Verilog 编译、XSim、综合/实现、bitstream 或上板 PASS。
 - `req_addr_i` 原样写入 WBSTAR；本平台 N25Q128 24-bit SPI 方案固定为 Flash byte offset，不能外推到 32-bit SPI/BPI。
 - XSim 中观察到 UNISIM IPROG pulse 不等于真实器件已重配置。
 - `_artifacts/latest` 只能指向成功且产物完整的 artifact 目录。
@@ -53,16 +59,16 @@
 ## 5. 待补证据 / 待决策 / 待授权
 
 - 人工审查前置 wrapper/TB/Tcl diff 和报告后决定是否提交。
-- 人工审查 S5 方案报告；确认 `0x00000000/0x00800000` 布局、4 MiB slot/guard、UART 首发方案与 fallback 口径。
-- S6 前必须提供或确认板载输入时钟频率、UART RX/TX pin 与 IO voltage、板上 Master SPI mode straps。
-- `CONFIGRATE` 首板建议 12 MHz、`TIMER_CFG=0x00050000` 均需后续 bitstream/实板复核；现有 XDC 50 MHz 尚未获板级证据。
+- 人工审查 S6 Top/UART/XDC diff 和扩大修改说明；Application build 必须设置 `PARAM_IMAGE_IS_APPLICATION=1`。
+- UART/Top 尚无 HDL parser、Vivado elaboration 或动态仿真证据；需单独授权 S7 XSim。
+- `CONFIGRATE=12`、`TIMER_CFG=0x00050000`、fallback/no-compress 均需后续 Vivado property/bitstream/实板复核。
 - bitstream、MCS/BIN、Flash 写入和 Hardware Manager 上板验证仍需单独授权。
 
 ## 6. 唯一下一步
 
-人工审查 `reports/20260719_194352_multiboot_flash_layout_solution_report.md`；确认并补齐 UART/时钟/mode strap 事实后，另起 S6 板级 Top + UART 触发集成 gate。
+人工审查 `reports/20260719_205547_board_top_uart_integration_static_report.md` 与 3 个工程文件 diff；确认后另起 S7 Top/UART 自检 TB + Vivado XSim gate。
 
 ## 7. 仓库要点
 
-- S5 开工时唯一脏改动为用户已 staged 的 `prompts/codex/005_complete_solution_design_combined_with_hardware_facts.md`，本轮未修改、未取消暂存。
+- S6 开工时唯一脏改动为用户修改的 `prompts/codex/006_board_level_top_uart_trigger_integration_def_impl.md` 1 行硬件事实，本轮未修改、未回滚。
 - 本轮不执行 git add/commit/push/reset/clean/stash，不运行综合/实现/bitstream，不上板。

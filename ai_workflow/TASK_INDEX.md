@@ -9,7 +9,7 @@
 | 任务 | 状态 | 分支 | 下一步（一句话） | 事实源 |
 |---|---|---|---|---|
 | 20260717_xsim_smoke_test | DONE | dev | 作为 XSim smoke 基线保留；后续不再以 smoke PASS 代表 Multiboot 功能。 | `tasks/20260717_xsim_smoke_test/TASK_STATE.md` |
-| 20260717_multiboot_ctrl_fsm | ACTIVE | dev | 人工审查 S5 Flash/WBSTAR 方案并补齐 UART/时钟/mode strap 事实；随后进入 S6 Top + UART 集成。 | `tasks/20260717_multiboot_ctrl_fsm/TASK_STATE.md` |
+| 20260717_multiboot_ctrl_fsm | ACTIVE | dev | 人工审查 S6 Top/UART/XDC 实现；确认后授权 S7 自检 TB + Vivado XSim。 | `tasks/20260717_multiboot_ctrl_fsm/TASK_STATE.md` |
 
 ## 表② 跨任务硬事实与证据红线
 
