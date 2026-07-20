@@ -5,7 +5,7 @@
 
 ## 1. 当前状态
 
-- ACTIVE。阶段：S4 ICAPE2 wrapper + UNISIM XSim 接口仿真已 PASS，等待人工审查 diff/report。
+- ACTIVE。阶段：S4 ICAPE2 wrapper + UNISIM XSim 接口仿真已 PASS；本轮已完成当前实现逻辑梳理，等待人工审查报告并决定是否进入 S5 Flash/布局定义。
 - 唯一下一步见 §6。
 
 ## 2. 关键事实（每条一行，证据 = report/commit 指针）
@@ -26,6 +26,8 @@
 - UNISIM 模型观测到 `WBSTAR=0x00200000` 与 IPROG pulse；证据：本轮报告。
 - WDB 为 `_artifacts/common_vivado/20260719_024313_xsim-multiboot-ctrl/multiboot_ctrl.wdb`，44104 bytes；证据：本轮报告。
 - `_runs/latest` 与 `_artifacts/latest` 均指向 `common_vivado/20260719_024313_xsim-multiboot-ctrl`；证据：本轮报告。
+- 本轮未改 RTL/Tcl/TB、未运行 Vivado，仅新增当前实现逻辑梳理报告；证据：`reports/20260719_183228_multiboot_logic_sortout_report.md`。
+- 当前 `rtl/hdl/user/Top.v` 为空，Multiboot 链路尚未接入板级顶层；证据：`reports/20260719_183228_multiboot_logic_sortout_report.md`。
 
 ## 3. 阶段门（每 gate 一行：Planned / In Progress / Done）
 
@@ -45,13 +47,14 @@
 
 ## 5. 待补证据 / 待决策 / 待授权
 
-- 人工审查本轮 wrapper/TB/Tcl diff 和报告后决定是否提交。
+- 人工审查本轮逻辑梳理报告，确认当前实现边界表述无误。
+- 人工审查前置 wrapper/TB/Tcl diff 和报告后决定是否提交。
 - 上板前必须确定目标器件精确型号、配置模式、Flash byte address 到 WBSTAR 的编码、镜像布局、ICAP 时钟约束和 fallback 策略。
 - bitstream、MCS/BIN、Flash 写入和 Hardware Manager 上板验证仍需单独授权。
 
 ## 6. 唯一下一步
 
-人工审查本轮 diff/report；通过后另起一轮定义具体 Flash 模式/布局与上板验证 gate。
+人工审查 `reports/20260719_183228_multiboot_logic_sortout_report.md`；确认后另起一轮定义 S5 Flash 模式/镜像布局/WBSTAR 编码与上板验证 gate。
 
 ## 7. 仓库要点
 

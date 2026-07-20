@@ -67,15 +67,15 @@ assign icap_data_o_o = icap_read_data_w;
 // 7 Series / Zynq-7000 internal configuration access port
 // ============================================================
 
-ICAPE2 #(
-    .ICAP_WIDTH       ("X32"),
-    .SIM_CFG_FILE_NAME("NONE")
-) u_icape2 (
-    .O                (icap_read_data_w),
-    .CLK              (C_gclk_100M_i),
-    .CSIB             (icap_csib_o),
-    .I                (icap_data_w),
-    .RDWRB            (icap_rdwrb_o)
-);
+    ICAPE2 #(
+    .ICAP_WIDTH                         ("X32"                     ),//数据总线位宽
+    .SIM_CFG_FILE_NAME                  ("NONE"                    ) 
+    ) u_icape2 (
+    .O                                  (icap_read_data_w          ),//读数据总线X32bit
+    .CLK                                (C_gclk_100M_i             ),
+    .CSIB                               (icap_csib_o               ),//片选使能
+    .I                                  (icap_data_w               ),//写数据总线X32bit
+    .RDWRB                              (icap_rdwrb_o              ) //读/写选择
+    );
 
 endmodule

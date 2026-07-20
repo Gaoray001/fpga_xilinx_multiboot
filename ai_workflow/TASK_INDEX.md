@@ -9,7 +9,7 @@
 | 任务 | 状态 | 分支 | 下一步（一句话） | 事实源 |
 |---|---|---|---|---|
 | 20260717_xsim_smoke_test | DONE | dev | 作为 XSim smoke 基线保留；后续不再以 smoke PASS 代表 Multiboot 功能。 | `tasks/20260717_xsim_smoke_test/TASK_STATE.md` |
-| 20260717_multiboot_ctrl_fsm | ACTIVE | dev | 人工审查 ICAPE2 XSim diff/report；通过后另起一轮定义具体 Flash 模式/布局与上板验证 gate。 | `tasks/20260717_multiboot_ctrl_fsm/TASK_STATE.md` |
+| 20260717_multiboot_ctrl_fsm | ACTIVE | dev | 人工审查逻辑梳理报告；确认后定义 S5 Flash 模式/镜像布局/WBSTAR 编码与上板验证 gate。 | `tasks/20260717_multiboot_ctrl_fsm/TASK_STATE.md` |
 
 ## 表② 跨任务硬事实与证据红线
 
