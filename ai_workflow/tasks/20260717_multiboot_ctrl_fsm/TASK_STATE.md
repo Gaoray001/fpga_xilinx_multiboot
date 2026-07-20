@@ -5,14 +5,14 @@
 
 ## 1. 当前状态
 
-- ACTIVE。阶段：S4 ICAPE2 wrapper + UNISIM XSim 接口仿真已 PASS；本轮已完成当前实现逻辑梳理，等待人工审查报告并决定是否进入 S5 Flash/布局定义。
+- ACTIVE。阶段：S5 Flash 模式 / 镜像布局 / WBSTAR 编码方案已定义；等待人工审查并补充板级 UART/时钟事实后进入 S6。
 - 唯一下一步见 §6。
 
 ## 2. 关键事实（每条一行，证据 = report/commit 指针）
 
 ### 继承基线
 
-- 分支 `dev`，本轮基线 `076720e 增加最小multiboot逻辑实现`；证据：本轮报告。
+- 分支 `dev`，S5 本轮基线 `27bbdef 增加multiboot逻辑实现理解`；证据：本轮 S5 报告。
 - 抽象 controller 与前置 XSim PASS 已提交；证据：`reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md`。
 
 ### 本轮新增事实
@@ -28,6 +28,10 @@
 - `_runs/latest` 与 `_artifacts/latest` 均指向 `common_vivado/20260719_024313_xsim-multiboot-ctrl`；证据：本轮报告。
 - 本轮未改 RTL/Tcl/TB、未运行 Vivado，仅新增当前实现逻辑梳理报告；证据：`reports/20260719_183228_multiboot_logic_sortout_report.md`。
 - 当前 `rtl/hdl/user/Top.v` 为空，Multiboot 链路尚未接入板级顶层；证据：`reports/20260719_183228_multiboot_logic_sortout_report.md`。
+- S5 固定目标为 `xc7a35tfgg484-2` + `N25Q128A13ESE40G` 16 MiB + Master SPI x4 / 24-bit byte addressing；证据：`reports/20260719_194352_multiboot_flash_layout_solution_report.md`。
+- Golden offset/WBSTAR 为 `0x00000000`，Application offset/WBSTAR 为 `0x00800000`；单镜像规划上限 4 MiB，中间保留 4 MiB guard；证据：本轮 S5 报告。
+- 默认上电运行 Golden；第一阶段由 UART 运行时触发 ICAPE2，两个 bitstream 均不嵌入自动 NEXT_CONFIG_ADDR/IPROG；Ethernet 触发后移；证据：本轮 S5 报告。
+- S5 只完成方案定义，未改代码、未运行 Vivado、未生成 bitstream/MCS、未上板；证据：本轮 S5 报告。
 
 ## 3. 阶段门（每 gate 一行：Planned / In Progress / Done）
 
@@ -36,27 +40,29 @@
 - S2 Done — Linux XSim 抽象功能仿真运行通过。
 - S3 Done — 抽象仿真状态与报告收口。
 - S4 Done — ICAPE2 wrapper、UNISIM elaboration、自检 XSim 和报告收口。
+- S5 Done — Flash 模式、双镜像布局、WBSTAR 编码、UART 首发触发和恢复方案定义。
 
 ## 4. 证据边界 / 禁止误称
 
 - 本轮证明 controller → wrapper → ICAPE2 UNISIM 的接口、控制节拍、位序和命令解码仿真通过。
-- 本轮不证明 bitstream、Flash 内容/布局、配置模式、时钟约束、实际 FPGA 重配置或 fallback 成功。
-- `req_addr_i` 当前原样写入 WBSTAR，是寄存器 payload；若上层提供 Flash byte address，必须按实际 SPI/BPI 模式另行编码和验证。
+- S5 只定义 Flash 布局/地址方案，不证明实际 Flash 内容、bitstream、板级配置模式、时钟约束、真实 FPGA 重配置或 fallback 成功。
+- `req_addr_i` 原样写入 WBSTAR；本平台 N25Q128 24-bit SPI 方案固定为 Flash byte offset，不能外推到 32-bit SPI/BPI。
 - XSim 中观察到 UNISIM IPROG pulse 不等于真实器件已重配置。
 - `_artifacts/latest` 只能指向成功且产物完整的 artifact 目录。
 
 ## 5. 待补证据 / 待决策 / 待授权
 
-- 人工审查本轮逻辑梳理报告，确认当前实现边界表述无误。
 - 人工审查前置 wrapper/TB/Tcl diff 和报告后决定是否提交。
-- 上板前必须确定目标器件精确型号、配置模式、Flash byte address 到 WBSTAR 的编码、镜像布局、ICAP 时钟约束和 fallback 策略。
+- 人工审查 S5 方案报告；确认 `0x00000000/0x00800000` 布局、4 MiB slot/guard、UART 首发方案与 fallback 口径。
+- S6 前必须提供或确认板载输入时钟频率、UART RX/TX pin 与 IO voltage、板上 Master SPI mode straps。
+- `CONFIGRATE` 首板建议 12 MHz、`TIMER_CFG=0x00050000` 均需后续 bitstream/实板复核；现有 XDC 50 MHz 尚未获板级证据。
 - bitstream、MCS/BIN、Flash 写入和 Hardware Manager 上板验证仍需单独授权。
 
 ## 6. 唯一下一步
 
-人工审查 `reports/20260719_183228_multiboot_logic_sortout_report.md`；确认后另起一轮定义 S5 Flash 模式/镜像布局/WBSTAR 编码与上板验证 gate。
+人工审查 `reports/20260719_194352_multiboot_flash_layout_solution_report.md`；确认并补齐 UART/时钟/mode strap 事实后，另起 S6 板级 Top + UART 触发集成 gate。
 
 ## 7. 仓库要点
 
-- 开工时唯一脏改动为用户修改的 `prompts/codex/003_advance_icap_logic_implementation_simulation_and_document_description.md`，本轮未修改、未清理、未回滚。
+- S5 开工时唯一脏改动为用户已 staged 的 `prompts/codex/005_complete_solution_design_combined_with_hardware_facts.md`，本轮未修改、未取消暂存。
 - 本轮不执行 git add/commit/push/reset/clean/stash，不运行综合/实现/bitstream，不上板。
