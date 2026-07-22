@@ -5,7 +5,7 @@
 
 ## 1. 当前状态
 
-- ACTIVE。阶段：S7 Linux Vivado 编译/XSim gate 已完成，S8 逻辑梳理报告完成；Top/UART 自检仿真 PASS。
+- ACTIVE。阶段：S9 上板验证指导与 latest WDB 打开脚本完成；尚未获得实际上板 PASS 证据。
 - 唯一下一步见 §6。
 
 ## 2. 关键事实（每条一行，证据 = report/commit 指针）
@@ -43,6 +43,8 @@
 - S7 自检覆盖 UART 非法命令拒绝、partial-command timeout、ACK `0x06`、valid-ready backpressure hold、APP/GOLDEN 地址、ICAP 8-word 序列、byte bit-reversal、UNISIM WBSTAR/IPROG；证据：本轮 S7 报告。
 - 当前 latest WDB 为 `_artifacts/common_vivado/20260719_235747_xsim-top-uart-multiboot/top_uart_multiboot.wdb`，660151 bytes；`_runs/latest` 与 `_artifacts/latest` 均指向该成功 run；证据：本轮 S8 梳理报告。
 - 已完成顶层/子模块调用逻辑、数据走向、testbench 激励与推进下一阶段判据说明；证据：`reports/20260720_003126_top_uart_logic_and_tb_arrangement_report.md`。
+- 人工已执行 full build 生成 bitstream 且无时序报错；只读核对 `_runs/latest -> common_vivado/20260720_014923_full`，`Top.bit` 2192126 bytes，timing met，impl DRC 0；证据：`reports/20260720_021049_multiboot_board_verify_guidance_report.md`。
+- 新增脚本 `scripts/open_latest_wbd.sh`，用于打开 `_artifacts/latest/*.wdb` 波形；证据：本轮 S9 报告。
 
 ## 3. 阶段门（每 gate 一行：Planned / In Progress / Done）
 
@@ -55,6 +57,7 @@
 - S6 Done — 板级 Top/UART/LED/XDC 实现与非 EDA 结构化静态自检。
 - S7 Done — Linux Vivado `xvlog/xelab/xsim` Top/UART 自检仿真。
 - S8 Done — 当前 Top/UART 集成逻辑与 testbench 安排梳理报告。
+- S9 Done — 上板验证指导说明与 latest WDB 打开脚本。
 
 ## 4. 证据边界 / 禁止误称
 
@@ -62,6 +65,7 @@
 - S5 只定义 Flash 布局/地址方案，不证明实际 Flash 内容、bitstream、板级配置模式、时钟约束、真实 FPGA 重配置或 fallback 成功。
 - S6 静态 PASS 不等于 Verilog 编译、XSim、综合/实现、bitstream 或上板 PASS。
 - S7 XSim PASS 证明 Top/UART/controller/wrapper/ICAPE2 UNISIM 在仿真参数下通过自检；不证明综合、实现、XDC property、bitstream、Flash、真实 UART 或实板重配置。
+- S9 只提供上板验证指导和单 bitstream 构建核对，不证明双镜像 MCS、Flash 写入、UART 实物触发或 multiboot 实板成功。
 - `req_addr_i` 原样写入 WBSTAR；本平台 N25Q128 24-bit SPI 方案固定为 Flash byte offset，不能外推到 32-bit SPI/BPI。
 - XSim 中观察到 UNISIM IPROG pulse 不等于真实器件已重配置。
 - `_artifacts/latest` 只能指向成功且产物完整的 artifact 目录。
@@ -70,14 +74,14 @@
 
 - 人工审查前置 wrapper/TB/Tcl diff 和报告后决定是否提交。
 - 人工审查 S7 Top/UART TB/Tcl/Shell diff 和扩大修改说明；Application build 必须设置 `PARAM_IMAGE_IS_APPLICATION=1`。
-- `CONFIGRATE=12`、`TIMER_CFG=0x00050000`、fallback/no-compress 均需后续 Vivado property/bitstream/实板复核。
-- bitstream、MCS/BIN、Flash 写入和 Hardware Manager 上板验证仍需单独授权。
+- 当前只看到单个 `Top.bit`，尚未看到明确的 Golden/Application 两个 bit 或合并 MCS；Application build 必须设置 `PARAM_IMAGE_IS_APPLICATION=1`。
+- MCS/BIN、Flash 写入、Hardware Manager 上板验证日志仍需人工执行并回传。
 
 ## 6. 唯一下一步
 
-人工审查 `reports/20260720_003126_top_uart_logic_and_tb_arrangement_report.md`；确认理解与证据边界后另起 S9 Vivado build/property 审计 gate。
+人工按 `reports/20260720_021049_multiboot_board_verify_guidance_report.md` 执行或审查上板验证；回传 bit/MCS/Hardware Manager/UART/LED 证据后另起 S10 实板结果收口 gate。
 
 ## 7. 仓库要点
 
-- S8 开工时唯一脏改动为未跟踪 `prompts/codex/008_multiboot_new_top_uart_integrated_selftest_testbench_arrange.md`；本轮未修改、未回滚。
+- S9 开工时唯一脏改动为未跟踪 `prompts/codex/009_push_multiboot_board_verify.md`；本轮未修改、未回滚。
 - 本轮不执行 git add/commit/push/reset/clean/stash，不运行综合/实现/bitstream，不上板。

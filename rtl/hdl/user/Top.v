@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module Top #(
-    parameter integer PARAM_IMAGE_IS_APPLICATION = 0,
+    parameter integer PARAM_IMAGE_IS_APPLICATION = 1,
     parameter integer PARAM_CLK_FREQ_HZ          = 50_000_000,
     parameter integer PARAM_UART_BAUD            = 115_200,
     parameter [31:0]  PARAM_GOLDEN_ADDR          = 32'h0000_0000,

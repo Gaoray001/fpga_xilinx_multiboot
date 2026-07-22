@@ -9,7 +9,7 @@
 | 任务 | 状态 | 分支 | 下一步（一句话） | 事实源 |
 |---|---|---|---|---|
 | 20260717_xsim_smoke_test | DONE | dev | 作为 XSim smoke 基线保留；后续不再以 smoke PASS 代表 Multiboot 功能。 | `tasks/20260717_xsim_smoke_test/TASK_STATE.md` |
-| 20260717_multiboot_ctrl_fsm | ACTIVE | dev | 人工审查 S8 逻辑/TB 梳理报告；确认后授权 S9 build/property 审计。 | `tasks/20260717_multiboot_ctrl_fsm/TASK_STATE.md` |
+| 20260717_multiboot_ctrl_fsm | ACTIVE | dev | 人工按 S9 上板指导执行/审查；回传实板证据后收口。 | `tasks/20260717_multiboot_ctrl_fsm/TASK_STATE.md` |
 
 ## 表② 跨任务硬事实与证据红线
 
@@ -21,6 +21,7 @@
 | controller → ICAPE2 wrapper → ICAPE2 UNISIM 接口仿真已 PASS。 | `tasks/20260717_multiboot_ctrl_fsm/reports/20260719_024339_multiboot_icape2_xsim_report.md` |
 | Top/UART → controller → ICAPE2 UNISIM 集成仿真已 PASS。 | `tasks/20260717_multiboot_ctrl_fsm/reports/20260719_232416_top_uart_xsim_report.md` |
 | Top/UART 集成逻辑与 testbench 安排已完成说明。 | `tasks/20260717_multiboot_ctrl_fsm/reports/20260720_003126_top_uart_logic_and_tb_arrangement_report.md` |
+| 上板验证指导与 latest WDB 打开脚本已完成。 | `tasks/20260717_multiboot_ctrl_fsm/reports/20260720_021049_multiboot_board_verify_guidance_report.md` |
 | `_artifacts/latest` 表示最近一次成功且产物完整的 artifact 目录；失败运行不得覆盖。 | `ai_workflow/AGENT_RULES.md` / `tasks/20260717_multiboot_ctrl_fsm/reports/20260717_021312_multiboot_ctrl_fsm_xsim_report.md` |
 
 ### 证据红线（禁止误称，所有任务适用）
